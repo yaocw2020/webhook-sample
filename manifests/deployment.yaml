@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: webhook-sample
+  name: webhook-sample
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: webhook-sample
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: webhook-sample
+    spec:
+      serviceAccountName: webhook-sample
+      containers:
+        - env:
+            - name: WEBHOOK_SERVER_HTTPS_PORT
+              value: "8443"
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+            - name: CONTROLLER_USER_NAME
+              value: system:serviceaccount:default:webhook-sample
+          image: armarny/webhook-sample:latest
+          imagePullPolicy: IfNotPresent
+          name: webhook-sample
+          ports:
+            - containerPort: 8443
+              name: https
+              protocol: TCP
+          resources: {}
+          securityContext:
+            capabilities:
+              add:
+                - SYS_ADMIN
